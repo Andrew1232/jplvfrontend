@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import './App.css';
-
+import Button from 'react-bootstrap/Button';
 
 
 
@@ -11,69 +11,17 @@ function App() {
   const [words, setWords] = useState([])
   // steits priekš jauna autora inputa
   const [newWord, setNewWord] = useState({ kanji: "", onyomi: "", kunyomi: "", latValTulk: "", word: "", checked: 1})
-
   // funkcija lai paprasītu visus autorus no servera
   const fetchAllWords = () => {
     axios.get(`http://localhost:3004/${language}`).then((response) => {
       setWords(response.data)
     });
   }
-
-
-  
-
-  const [language, setLanguage] = useState('japanese')
-
   // izskauksies vienu reizi uz komponenta ielādi
+  const [language, setLanguage] = useState('japanese')
   useEffect(() => {
     fetchAllWords();
   }, [language]);
-
-  function generateWord() {
-    const randomIndex = Math.floor(Math.random() * words.length);
-    const randomWord = words[randomIndex];
-    return randomWord
-  }
-  
-  function createList(length){
-    return    Array(8).fill().map((element, index) => index)
-  }
-
-  function shuffle(list) {
-    var j, x, i;
-    for (i = list.length - 1; i > 0; i--) {
-        j = Math.floor(Math.random() * (i + 1));
-        x = list[i];
-        list[i] = list[j];
-        list[j] = x;
-    }
-    return list;
-}
-
-
-  
-
-  // const [isChecked, setIsChecked] = useState(0);
-
-  function handleCheckboxChange(event) {
-    // setIsChecked(event.target.checked);
-    console.log(event.target.checked)
-    console.log(event.target.id)
-    // console.log(words[event.target.id-1])
-    words[event.target.id-1].checked=event.target.checked
-    console.log(words[event.target.id-1].checked=event.target.checked)
-    // console.log(words[event.target.id-1])
-    // setNewWord((prev) => ({ ...prev, checked: event.target.checked }));
-    console.log(words)
-  }
-
-
-//  function quizButton(){
-//   console.log(shuffle(createList(words.length)))
-//  }
-//   // pushCheckValue
-
-
 
 
   
@@ -93,154 +41,135 @@ function App() {
       });
   };
   
+  // const handleDelete = (word) => {
+  //   console.log(word.id)
+  //   axios.delete(`http://localhost:3004/${language}/${word.id}`)
+  //     .then(() => {
+  //       // console.log('delete', word.id)
+  //       fetchAllWords();
+  //     })
+  //     .catch((error) => {
+  //       console.error(error);
+  //       alert("An error occurred while deleting the word. Please try again later.");
+  //     });
+  // };
+
+  const handleDelete = (word) => {
+    console.log(word)
+    axios.delete(`http://localhost:3004/english/${word}`)
+    
+      .then((response) => {
+        alert(response.data.message);
+        fetchAllWords();
+      })
+      .catch((error) => {
+        console.error(error);
+        alert("An error occurred while deleting the word. Please try again later.");
+      });
+  };
 
 
 
 
 
-
-// const handleDelete=(e, word)=>{
-//     e.preventDefault();
-//     console.log('hello')
-//     axios.delete(`http://localhost:3004/${language}`, word.id)
-//         .catch((error) => {
-//           console.error(error);
-//           alert("An error occurred while deleting the word. Please try again later.");
-
-//   })}
-
-
-
-
-// const handleDelete = (e, word) => {
-//   e.preventDefault();
-//   axios.delete(`http://localhost:3004/${language}/${word.id}`)
-//     .then(() => {
-//       fetchAllWords();
-//     })
-//     .catch((error) => {
-//       console.error(error);
-//       alert("An error occurred while deleting the word. Please try again later.");
-//     });
-// };
-  
-
-
-
-const handleDelete = (word) => {
-  axios.delete(`http://localhost:3004/${language}`, {id:word.id})
-    .then(() => {
-      console.log('delete', word.id)
-      fetchAllWords();
-    })
-    .catch((error) => {
-      console.error(error);
-      alert("An error occurred while deleting the word. Please try again later.");
-    });
-};
-
-
-
-
+  function handleCheckboxChange(event) {
+    words[event.target.id-1].checked=event.target.checked
+    console.log(words[event.target.id-1].checked=event.target.checked)
+    try{
+      console.log(getRandomObjectFromObjArray(filterList(words)))
+    }
+    catch (error) {
+  console.error(error.message);
+    }
+  }
 
 
   const [displayQuiz, setDisplayQuiz] = useState(false);
-  function changeOverlay() {
+  function changeOverlayQuiz() {
     if(displayQuiz){
       setDisplayQuiz(false)
+      setDisplayQuizAnswer(false)
     }else{
-    setDisplayQuiz(true)
+      updateQuiz(words)
+      setDisplayQuiz(true)
+      let newDisplayword = getRandomObjectFromObjArray(filterList(words));
+      setDisplaywordKanji(newDisplayword ? newDisplayword : fullObj);
+    }
+  }
+
+  const [displayQuizAnswer, setDisplayQuizAnswer] = useState(false);
+  function changeOverlayAnswer() {
+    if(displayQuizAnswer){
+      setDisplayQuizAnswer(false)  
+    }else{
+    setDisplayQuizAnswer(true)
   }
   }
 
 
 
+  // Pārbauda vai vārdam ir atzīmēts checkbox
+  function filterList(objArray) {
+    let filteredList = objArray.filter(item => item.checked === 1||item.checked === true);
+    return filteredList
+  }
+  
 
+  const fullObj={ kanji: "click the new word button, to start the quiz", onyomi: newWord.onyomi, kunyomi: newWord.kunyomi, latValTulk: newWord.latValTulk }
 
+  function getRandomObjectFromObjArray(objArray) {
+    const randomIndex = Math.floor(Math.random() * objArray.length);
+    return objArray[randomIndex];
+  }
 
+  function updateQuiz(){
+    let newDisplayword = getRandomObjectFromObjArray(filterList(words));
+    setDisplaywordKanji(newDisplayword ? newDisplayword : fullObj);
+
+  }
+
+  const [displaywordKanji, setDisplaywordKanji] = useState(filterList(words)[0] || fullObj)
 
 
   return (
     
     <div className="App">
       <head>
-      <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossOrigin="anonymous"></link>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossOrigin="anonymous"></link>
       </head>
       
 
       
-
-
-
-
-
-
-      
       <header className="App-header">
-      <div id='screenOverlay' className={`Screen-overlay ${displayQuiz ? 'display' : ''}`}>
-      <form>
-        <div>
-          aaaaaaa
-          {generateWord}
+        <div id='screenOverlay ' className={`Screen-overlay ${displayQuiz ? '' : 'hidden'}`}>
+          <form className='vw-50 vh-80 align-middle'>
+            <div className='quiz-wrapper vw-50 vh-80 '>
+              <div className='quiz p-1 border border-dark border-2'>
+                <div>
+                  <h1 className='bg-light text-dark p-1'>Vārds svešvalodā</h1>
+                  <div className=' quiz-bg '>
+                    <h1 className='border border-light border-2'>{language==='english' ? String(displaywordKanji.word) : String(displaywordKanji.kanji)}</h1>
+                  
+                    <h1 className={`Answer ${displayQuizAnswer ? '' : 'hidden'}  border border-light border-2`}>{String(displaywordKanji.latValTulk)}</h1>
+                  </div>
+                  
+                </div>
+                <Button className='mb-1' variant="primary" onClick={updateQuiz}>jauns vārds</Button>{' '}
+                <Button variant="light" onClick={changeOverlayAnswer}>rādīt/slēpt nozīmi</Button>{' '}
+              </div>
+            </div>
+          </form>
         </div>
-        <button onClick={()=>generateWord()}></button>
-      </form>
-
-</div>
 
 
-
-
-      
-
-
-
-
-      
-        <div className="navbar navbar-height smart-scroll fixed-top navbar-expand-lg navbar-light bg-white py-0 mdshadow-1">
-
-
+        <div className="navbar navbar-height smart-scroll fixed-top navbar-expand-lg navbar-light bg-white py-0 mdshadow-1 text-dark ">
+          <button onClick={changeOverlayQuiz}>quiz</button>
+          <h2 >Flash kāršu(Flash card) veidotājs un svešvārdu atkārtotājs</h2>
+        </div>
         
-
-
-
-
-
-
-        <button onClick={changeOverlay}>quiz</button>
-
-
-          {/* console.log(shuffle(createList(words.length()))) */}
-
-
-
-
-
-
-
-
-        </div>
-        <h2>Insert a new word</h2>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        <h2 className=' mt-5'>Pievieno jaunu kārti</h2>
+        
 
 
 
@@ -250,12 +179,7 @@ const handleDelete = (word) => {
             setLanguage(e.target.value);
             setNewWord({ kanji: "", onyomi: "", kunyomi: "", latValTulk: "", word: "" , checked:1});
             fetchAllWords()
-            
-            // console.log(language)
-            // console.log(words)
-
-            
-          }}>
+            }}>
             <option value="japanese">Japāņu</option>
             <option value="english">Angļu</option>
           </select>
@@ -264,170 +188,140 @@ const handleDelete = (word) => {
 
 
         {language === "japanese" ? (
-
-<form onSubmit={handleSubmit}>
-
-
-            
-          <input 
-            required
-            placeholder='kanji...'
-            type="text"
-            value={newWord.kanji}
-            onChange={(e) => {
-              const updatedNewWord={...newWord,
-                kanji:e.target.value}
-              setNewWord(updatedNewWord)
-              // console.log(newWord)
-            }}
-          /> 
-          <br />
-          <input 
-            required
-            placeholder='kanji onyomi...'
-            type="text"
-            value={newWord.onyomi}
-            onChange={(e) => {
-              const updatedNewWord={...newWord,
-                onyomi:e.target.value}
-              setNewWord(updatedNewWord)
-              // console.log(newWord)
-            }}
-          /> 
-          <br />
-          <input 
-            required
-            placeholder='Kanji kunyomi'
-            type="text"
-            value={newWord.kunyomi}
-            onChange={(e) => {
-              const updatedNewWord={...newWord,
-                kunyomi:e.target.value}
-              setNewWord(updatedNewWord)
-              // console.log(newWord)
-            }}
-          /> 
-          <br />
-          <input 
-            required
-            placeholder='Kanji latValTulk'
-            type="text"
-            value={newWord.latValTulk}
-            onChange={(e) => {
-              const updatedNewWord={...newWord,
-                latValTulk:e.target.value}
-              setNewWord(updatedNewWord)
-              // console.log(newWord)
-            }}
-          /> 
-          <br />
-          <button>
-            Add new painting
-          </button>
-        </form>): (
-
-
-
-
-
-
           <form onSubmit={handleSubmit}>
-            <input
+            <input 
               required
-              placeholder="word..."
+              placeholder='kanji...'
               type="text"
-              value={newWord.word}
+              value={newWord.kanji}
               onChange={(e) => {
-                const updatedNewWord = { ...newWord, word: e.target.value };
-                setNewWord(updatedNewWord);
+                const updatedNewWord={...newWord,
+                  kanji:e.target.value}
+                setNewWord(updatedNewWord)
               }}
-            />
+            /> 
             <br />
+            <input 
+              // required
+              placeholder='kanji onyomi...'
+              type="text"
+              value={newWord.onyomi}
+              onChange={(e) => {
+                const updatedNewWord={...newWord,
+                  onyomi:e.target.value}
+                setNewWord(updatedNewWord)
+              }}
+            /> 
             <br />
-            <input
+            <input 
+              // required
+              placeholder='Kanji kunyomi'
+              type="text"
+              value={newWord.kunyomi}
+              onChange={(e) => {
+                const updatedNewWord={...newWord,
+                  kunyomi:e.target.value}
+                setNewWord(updatedNewWord)
+              }}
+            /> 
+            <br />
+            <input 
               required
-              placeholder="definition in Latvian..."
+              placeholder='Kanji latValTulk'
               type="text"
               value={newWord.latValTulk}
               onChange={(e) => {
-                const updatedNewWord = {
-                  ...newWord,
-                  latValTulk: e.target.value,
-                };
-                setNewWord(updatedNewWord);
+                const updatedNewWord={...newWord,
+                  latValTulk:e.target.value}
+                setNewWord(updatedNewWord)
               }}
-            />
+            /> 
             <br />
-            <br />
-            <button type="submit">Submit</button>
-          </form>
-        )}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            <button>
+              Add new painting
+            </button>
+          </form>): (
+            <form onSubmit={handleSubmit}>
+              <input
+                required
+                placeholder="word..."
+                type="text"
+                value={newWord.word}
+                onChange={(e) => {
+                  const updatedNewWord = { ...newWord, word: e.target.value };
+                  setNewWord(updatedNewWord);
+                }}
+              />
+              <br />
+              <br />
+              <input
+                required
+                placeholder="definition in Latvian..."
+                type="text"
+                value={newWord.latValTulk}
+                onChange={(e) => {
+                  const updatedNewWord = {
+                    ...newWord,
+                    latValTulk: e.target.value,
+                  };
+                  setNewWord(updatedNewWord);
+                }}
+              />
+              <br />
+              <br />
+              <button type="submit">Submit</button>
+            </form>
+          )
+        }
 
 
 
       <div className='grid-container'> 
 
-{language === "japanese" ? (
-words.map((word) => (
-<div key={word.id} className='.grid-item'>
-  <div className='grid-item-wrapper-inner'>
-    <div key={word.id}>
-    <h2 >{word.kanji}</h2>
-    <h3 >Onyomi:  {word.onyomi}</h3>
-    <h3 >Kunyomi:   {word.kunyomi}</h3>
-    <h3 className='nozLatVal'>Nozīme latviešu valodā:<br></br>{word.latValTulk}</h3>
-    
-    </div>
-  </div>
-  
-</div>
-))
-) : (
-words.map((word) => (
-  <div key={word.id} className='.grid-item'>
-    <div className='grid-item-wrapper-inner'>
-      {/* {console.log(word)} */}
-      <div key={word.id}>
-      <h2 >{word.word}</h2>
-      <h3 className='nozLatVal'>Nozīme latviešu valodā:<br></br>{word.latValTulk}</h3>
-      <label>
-        <input id={word.id} type="checkbox" defaultChecked onChange={handleCheckboxChange} />
-        Check me
-      </label>
-      <button onClick={() => handleDelete(word)}>Delete</button>
-      
-      
+        {language === "japanese" ? (
+          words.map((word) => (
+            <div key={word.id} className='.grid-item'>
+              <div className='grid-item-wrapper-inner'>
+                <div key={word.id}>
+                  <h2 >{word.kanji}</h2>
+                  <h3 >Onyomi:  {word.onyomi}</h3>
+                  <h3 >Kunyomi:   {word.kunyomi}</h3>
+                  <h3 className='nozLatVal'>Nozīme latviešu valodā:<br></br>{word.latValTulk}</h3>
+                  <label>
+                    <input id={word.id} type="checkbox" defaultChecked onChange={handleCheckboxChange} />
+                    Check me 
+                    {/* {console.log(word)} */}
+                  </label>
+                  <button onClick={() => handleDelete(word.id)}>Delete</button>
+                </div>
+              </div>
+            </div>
+          ))
+          ) : (
+          words.map((word) => (
+            
+            
+            <div key={word.id} className='.grid-item'>
+              
+              <div className='grid-item-wrapper-inner'>
+                <div key={word.id}>
+                  <h2 >{word.word}</h2>
+                  <h3 className='nozLatVal'>Nozīme latviešu valodā:<br></br>{word.latValTulk}</h3>
+                  <label>
+                    <input id={word.id} type="checkbox" defaultChecked onChange={handleCheckboxChange} />
+                    Check me
+                  </label>
+                  <button onClick={() => handleDelete(word.id)}>Delete</button>   
+                </div>
+              </div>
+            </div>
+          ))
+        )}
       </div>
-    </div>
-    
-  </div>
-))
-)}
-
-
-
-
-
- 
-        </div>
-
-
       </header>
-      {/* <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" integrity="sha384-w76AqPfDkMBDXo30jS1Sgez6pr3x5MlQ1ZAGC+nuZB+EYdgRZgiwxhTBTkF7CXvN" crossorigin="anonymous"></script> */}
+      <body>
+        
+      </body>
     </div>
   );
   
