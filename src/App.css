@@ -96,3 +96,7 @@
 .quiz-bg{
   background-color: #4a148c;
 }
+.input_field{
+  width: 35vw;
+  max-width: 500px;
+}

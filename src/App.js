@@ -3,9 +3,6 @@ import axios from 'axios';
 import './App.css';
 import Button from 'react-bootstrap/Button';
 
-
-
-
 function App() {
   // steits kur glabāsim autorus
   const [words, setWords] = useState([])
@@ -40,37 +37,14 @@ function App() {
         alert("An error occurred while adding the word. Please try again later.");
       });
   };
-  
-  // const handleDelete = (word) => {
-  //   console.log(word.id)
-  //   axios.delete(`http://localhost:3004/${language}/${word.id}`)
-  //     .then(() => {
-  //       // console.log('delete', word.id)
-  //       fetchAllWords();
-  //     })
-  //     .catch((error) => {
-  //       console.error(error);
-  //       alert("An error occurred while deleting the word. Please try again later.");
-  //     });
-  // };
 
-  const handleDelete = (word) => {
-    console.log(word)
-    axios.delete(`http://localhost:3004/english/${word}`)
-    
-      .then((response) => {
-        alert(response.data.message);
-        fetchAllWords();
-      })
-      .catch((error) => {
-        console.error(error);
-        alert("An error occurred while deleting the word. Please try again later.");
-      });
+  const handleDelete = (id) => {
+    console.log(id)
+    console.log(`http://localhost:3004/english/${id}`)
+    axios.delete(`http://localhost:3004/${language}/${id}`).then((response) => {
+      fetchAllWords();
+    });
   };
-
-
-
-
 
   function handleCheckboxChange(event) {
     words[event.target.id-1].checked=event.target.checked
@@ -82,6 +56,20 @@ function App() {
   console.error(error.message);
     }
   }
+
+
+  // function handleCheckboxChange(event) {
+  //   console.log(words)
+  //   console.log(event.target)
+  //   const updatedWords = [...words];
+  //   updatedWords[event.target.id] = event.target.checked;
+  //   setWords(updatedWords);
+  //   try {
+  //     console.log(getRandomObjectFromObjArray(filterList(updatedWords)));
+  //   } catch (error) {
+  //     console.error(error.message);
+  //   }
+  // }
 
 
   const [displayQuiz, setDisplayQuiz] = useState(false);
@@ -115,7 +103,7 @@ function App() {
   }
   
 
-  const fullObj={ kanji: "click the new word button, to start the quiz", onyomi: newWord.onyomi, kunyomi: newWord.kunyomi, latValTulk: newWord.latValTulk }
+  const fullObj={ kanji: "click the new word button, to start the quiz", onyomi: newWord.onyomi, kunyomi: newWord.kunyomi, latValTulk: newWord.latValTulk , checked:1}
 
   function getRandomObjectFromObjArray(objArray) {
     const randomIndex = Math.floor(Math.random() * objArray.length);
@@ -188,11 +176,12 @@ function App() {
 
 
         {language === "japanese" ? (
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit}  >
             <input 
               required
-              placeholder='kanji...'
+              placeholder='Vārds'
               type="text"
+              className=' input_field'
               value={newWord.kanji}
               onChange={(e) => {
                 const updatedNewWord={...newWord,
@@ -200,11 +189,17 @@ function App() {
                 setNewWord(updatedNewWord)
               }}
             /> 
+{/* <div class="form-floating mb-3">
+  <input type="email" class="form-control" id="floatingInput" placeholder="name@example.com"></input>
+  <label for="floatingInput">Email address</label>
+</div> */}
+
             <br />
             <input 
               // required
-              placeholder='kanji onyomi...'
+              placeholder='Onyomi izrunas'
               type="text"
+              className=' input_field'
               value={newWord.onyomi}
               onChange={(e) => {
                 const updatedNewWord={...newWord,
@@ -215,8 +210,9 @@ function App() {
             <br />
             <input 
               // required
-              placeholder='Kanji kunyomi'
+              placeholder='Kunyomi izrunas'
               type="text"
+              className=' input_field'
               value={newWord.kunyomi}
               onChange={(e) => {
                 const updatedNewWord={...newWord,
@@ -227,8 +223,9 @@ function App() {
             <br />
             <input 
               required
-              placeholder='Kanji latValTulk'
+              placeholder='Vārda nozīme latviešu valodā'
               type="text"
+              className=' input_field'
               value={newWord.latValTulk}
               onChange={(e) => {
                 const updatedNewWord={...newWord,
@@ -238,7 +235,7 @@ function App() {
             /> 
             <br />
             <button>
-              Add new painting
+              Pievienot vārdu
             </button>
           </form>): (
             <form onSubmit={handleSubmit}>
@@ -319,17 +316,9 @@ function App() {
         )}
       </div>
       </header>
-      <body>
-        
-      </body>
     </div>
   );
   
 }
 
 export default App;
-
-
-
-
-
