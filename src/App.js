@@ -4,29 +4,150 @@ import './App.css';
 import Button from 'react-bootstrap/Button';
 
 function App() {
+
+
+
+
+
+
+
+
+
+  const CryptoJS = require("crypto-js");
+
+
+  function atkriptetajs(dati){
+    let biti  = CryptoJS.AES.decrypt(dati, 'secret key 1');
+    let atkriptetiDati = biti.toString(CryptoJS.enc.Utf8);
+    return atkriptetiDati
+  }
+
+  function kriptetajs(dati){
+    let kriptetiDati=CryptoJS.AES.encrypt(dati, 'secret key 1').toString()
+   return kriptetiDati
+ }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   // steits kur glabāsim autorus
   const [words, setWords] = useState([])
   // steits priekš jauna autora inputa
   const [newWord, setNewWord] = useState({ kanji: "", onyomi: "", kunyomi: "", latValTulk: "", word: "", checked: 1})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   // funkcija lai paprasītu visus autorus no servera
   const fetchAllWords = () => {
     axios.get(`http://localhost:3004/${language}`).then((response) => {
-      setWords(response.data)
+      if(language==='japanese'){
+
+        let atkriptetiVardi=[]
+        
+
+        atkriptetiVardi=response.data.map((neatkriptetsVards)=>{
+          // console.log(neatkriptetsVards)
+          let atkriptetsVards={}
+          atkriptetsVards['id']=neatkriptetsVards.id
+          atkriptetsVards['kanji']=atkriptetajs(neatkriptetsVards.kanji)
+          atkriptetsVards['kunyomi']=atkriptetajs(neatkriptetsVards.kunyomi)
+          atkriptetsVards['onyomi']=atkriptetajs(neatkriptetsVards.onyomi)
+          atkriptetsVards['latValTulk']=atkriptetajs(neatkriptetsVards.latValTulk)
+          atkriptetsVards['checked']=neatkriptetsVards.checked
+          // console.log(atkriptetsVards)
+          return atkriptetsVards
+        })
+        // setWords(response.data)
+        setWords(atkriptetiVardi)
+      }  
+      else{
+        let atkriptetiVardi=[]
+        
+
+        atkriptetiVardi=response.data.map((neatkriptetsVards)=>{
+          // console.log(neatkriptetsVards)
+          let atkriptetsVards={}
+          atkriptetsVards['id']=neatkriptetsVards.id
+          atkriptetsVards['word']=atkriptetajs(neatkriptetsVards.word)
+          atkriptetsVards['latValTulk']=atkriptetajs(neatkriptetsVards.latValTulk)
+          atkriptetsVards['checked']=neatkriptetsVards.checked
+          // console.log(atkriptetsVards)
+          return atkriptetsVards
+        })
+        // setWords(response.data)
+        setWords(atkriptetiVardi)
+      }
+
+
+
+
     });
   }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   // izskauksies vienu reizi uz komponenta ielādi
   const [language, setLanguage] = useState('japanese')
   useEffect(() => {
     fetchAllWords();
+    // eslint-disable-next-line
   }, [language]);
 
 
   
+
+
+
+
+
+
+
+
+
+
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const requestData = language === "japanese"
-      ? { kanji: newWord.kanji, onyomi: newWord.onyomi, kunyomi: newWord.kunyomi, latValTulk: newWord.latValTulk}
-      : { word: newWord.word, latValTulk: newWord.latValTulk };
+      ? { kanji: kriptetajs(newWord.kanji) , onyomi: kriptetajs(newWord.onyomi), kunyomi: kriptetajs(newWord.kunyomi), latValTulk: kriptetajs(newWord.latValTulk)}
+      : { word: kriptetajs(newWord.word), latValTulk: kriptetajs(newWord.latValTulk)};
     axios.post(`http://localhost:3004/${language}`, requestData)
       .then(() => {
         fetchAllWords();
@@ -37,6 +158,18 @@ function App() {
         alert("An error occurred while adding the word. Please try again later.");
       });
   };
+
+
+
+
+
+
+
+
+
+
+
+
 
   const handleDelete = (id) => {
     console.log(id)
