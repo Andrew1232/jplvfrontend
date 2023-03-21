@@ -5,69 +5,33 @@ import Button from 'react-bootstrap/Button';
 
 function App() {
 
-
-
-
-
-
-
-
-
+  // atslēga, kuru izmanto kriptēšanai
+  const slepenaAtslega='secret key 1';
+  // importē kriptēšanas rīku
   const CryptoJS = require("crypto-js");
-
-
+  // funkcija, kuru izmanto lai kriptētu datus, kuri tiek sūtīti uz backend un vēlāk uz datubāzi
   function atkriptetajs(dati){
-    let biti  = CryptoJS.AES.decrypt(dati, 'secret key 1');
+    let biti  = CryptoJS.AES.decrypt(dati, slepenaAtslega);
     let atkriptetiDati = biti.toString(CryptoJS.enc.Utf8);
     return atkriptetiDati
   }
-
+  // funkcija, kuru izmanto lai atšifrētu no backend iegūtos datus
   function kriptetajs(dati){
-    let kriptetiDati=CryptoJS.AES.encrypt(dati, 'secret key 1').toString()
-   return kriptetiDati
- }
+    let kriptetiDati=CryptoJS.AES.encrypt(dati, slepenaAtslega).toString()
+    return kriptetiDati
+  }
 
+  // steits kur glabā vārdus
+  const [vardi, setVardi] = useState([])
+  // steits priekš jauna vārda, kuru var ievadīt frontend
+  const [jaunsVards, setJaunoVardu] = useState({ kanji: "", onyomi: "", kunyomi: "", latValTulk: "", word: "", checked: 1})
 
-
-
-
-
-
-
-
-
-
-
-
-
-  // steits kur glabāsim autorus
-  const [words, setWords] = useState([])
-  // steits priekš jauna autora inputa
-  const [newWord, setNewWord] = useState({ kanji: "", onyomi: "", kunyomi: "", latValTulk: "", word: "", checked: 1})
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  // funkcija lai paprasītu visus autorus no servera
-  const fetchAllWords = () => {
-    axios.get(`http://localhost:3004/${language}`).then((response) => {
-      if(language==='japanese'){
-
-        let atkriptetiVardi=[]
-        
-
-        atkriptetiVardi=response.data.map((neatkriptetsVards)=>{
-          // console.log(neatkriptetsVards)
+  // funkcija lai paprasītu visus vārdus no servera
+  const fetchVisusVardus = () => {
+    axios.get(`http://localhost:3004/${valoda}`).then((atbilde) => {
+      let atkriptetiVardi=[]
+      if(valoda==='japanu'){
+        atkriptetiVardi=atbilde.data.map((neatkriptetsVards)=>{
           let atkriptetsVards={}
           atkriptetsVards['id']=neatkriptetsVards.id
           atkriptetsVards['kanji']=atkriptetajs(neatkriptetsVards.kanji)
@@ -75,282 +39,194 @@ function App() {
           atkriptetsVards['onyomi']=atkriptetajs(neatkriptetsVards.onyomi)
           atkriptetsVards['latValTulk']=atkriptetajs(neatkriptetsVards.latValTulk)
           atkriptetsVards['checked']=neatkriptetsVards.checked
-          // console.log(atkriptetsVards)
           return atkriptetsVards
         })
-        // setWords(response.data)
-        setWords(atkriptetiVardi)
+        setVardi(atkriptetiVardi)
       }  
       else{
-        let atkriptetiVardi=[]
-        
-
-        atkriptetiVardi=response.data.map((neatkriptetsVards)=>{
-          // console.log(neatkriptetsVards)
+        atkriptetiVardi=atbilde.data.map((neatkriptetsVards)=>{
           let atkriptetsVards={}
           atkriptetsVards['id']=neatkriptetsVards.id
           atkriptetsVards['word']=atkriptetajs(neatkriptetsVards.word)
           atkriptetsVards['latValTulk']=atkriptetajs(neatkriptetsVards.latValTulk)
           atkriptetsVards['checked']=neatkriptetsVards.checked
-          // console.log(atkriptetsVards)
           return atkriptetsVards
         })
-        // setWords(response.data)
-        setWords(atkriptetiVardi)
+        setVardi(atkriptetiVardi)
       }
-
-
-
-
     });
   }
 
+  // steits, kur glabā atzīmēto valodu
+  const [valoda, setValoda] = useState('japanu')
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  // izskauksies vienu reizi uz komponenta ielādi
-  const [language, setLanguage] = useState('japanese')
+  // izsauksies vienu reizi uz komponenta ielādi
   useEffect(() => {
-    fetchAllWords();
+    fetchVisusVardus();
     // eslint-disable-next-line
-  }, [language]);
+  }, [valoda]);
 
-
-  
-
-
-
-
-
-
-
-
-
-
-
+  // funkcija, kas atbild par jauna vārda augšuplādi uz datubāzi
   const handleSubmit = (e) => {
     e.preventDefault();
-    const requestData = language === "japanese"
-      ? { kanji: kriptetajs(newWord.kanji) , onyomi: kriptetajs(newWord.onyomi), kunyomi: kriptetajs(newWord.kunyomi), latValTulk: kriptetajs(newWord.latValTulk)}
-      : { word: kriptetajs(newWord.word), latValTulk: kriptetajs(newWord.latValTulk)};
-    axios.post(`http://localhost:3004/${language}`, requestData)
+    const pieprasijumaDati = valoda === "japanu"
+      ? { kanji: kriptetajs(jaunsVards.kanji) , onyomi: kriptetajs(jaunsVards.onyomi), kunyomi: kriptetajs(jaunsVards.kunyomi), latValTulk: kriptetajs(jaunsVards.latValTulk)}
+      : { word: kriptetajs(jaunsVards.word), latValTulk: kriptetajs(jaunsVards.latValTulk)};
+    axios.post(`http://localhost:3004/${valoda}`, pieprasijumaDati)
       .then(() => {
-        fetchAllWords();
-        setNewWord({ kanji: "", onyomi: "", kunyomi: "", latValTulk: "", word: "", checked:1 });
+        fetchVisusVardus();
+        setJaunoVardu({ kanji: "", onyomi: "", kunyomi: "", latValTulk: "", word: "", checked:1 });
       })
-      .catch((error) => {
-        console.error(error);
-        alert("An error occurred while adding the word. Please try again later.");
+      .catch((kluda) => {
+        console.error(kluda);
+        alert("Tika sastapta kļūda, kamēr centās augšuplādēt vārdu. Lūdzu pamēģiniet atkal vēlāk.");
       });
   };
 
-
-
-
-
-
-
-
-
-
-
-
-
-  const handleDelete = (id) => {
-    console.log(id)
-    console.log(`http://localhost:3004/english/${id}`)
-    axios.delete(`http://localhost:3004/${language}/${id}`).then((response) => {
-      fetchAllWords();
+  // funkcija, kas atbild par nevēlama vārda izdzēšanas no datubāzes
+  const handleDzesanu = (id) => {
+    axios.delete(`http://localhost:3004/${valoda}/${id}`).then((atbilde) => {
+      fetchVisusVardus();
     });
   };
 
-  function handleCheckboxChange(event) {
-    words[event.target.id-1].checked=event.target.checked
-    console.log(words[event.target.id-1].checked=event.target.checked)
+  // Funkcija, kas izfiltrē vārdus, kuriem ir atzīmēts checkbox
+  function filtretSarakstu(objSaraksts) {
+    let filtretsSaraksts = objSaraksts.filter(item => item.checked === 1||item.checked === true);
+    return filtretsSaraksts
+  }
+
+  // funkcija, kura no objekta pēc nejaušības principa izvēlas vārdu 
+  function iegutNejausuObjektuNoSaraksta(objSaraksts) {
+    const nejaussIndekss = Math.floor(Math.random() * objSaraksts.length);
+    return objSaraksts[nejaussIndekss];
+  }
+
+  // funkcija, kas atbild par vārda checked vērtības maiņu, kad tiek atzīmēta izvēles rūtiņa
+  function handleIzvelesRurinasMainu(notikums) {
     try{
-      console.log(getRandomObjectFromObjArray(filterList(words)))
+      vardi[notikums.target.id-1].checked=notikums.target.checked
+      console.log(vardi[notikums.target.id-1].checked)
     }
     catch (error) {
-  console.error(error.message);
+      console.error(error.message);
     }
   }
 
+  // noklusejumaObjekts, kuru izmanto, ja atzīmētajā valodā nav vārdu
+  const noklusejumaObjekts={ kanji: "Nav atzīmēts neviens vārds atkārtošanai. Atzīmē ar ķeksīti tos vārdus, kurus tu vēlies atkārtot, un tad atgriezies šeit", word:"Nav atzīmēts neviens vārds atkārtošanai. Atzīmē ar ķeksīti tos vārdus, kurus tu vēlies atkārtot, un tad atgriezies šeit", onyomi: jaunsVards.onyomi, kunyomi: jaunsVards.kunyomi, latValTulk: jaunsVards.latValTulk , checked:1}
 
-  // function handleCheckboxChange(event) {
-  //   console.log(words)
-  //   console.log(event.target)
-  //   const updatedWords = [...words];
-  //   updatedWords[event.target.id] = event.target.checked;
-  //   setWords(updatedWords);
-  //   try {
-  //     console.log(getRandomObjectFromObjArray(filterList(updatedWords)));
-  //   } catch (error) {
-  //     console.error(error.message);
-  //   }
-  // }
-
-
-  const [displayQuiz, setDisplayQuiz] = useState(false);
-  function changeOverlayQuiz() {
-    if(displayQuiz){
-      setDisplayQuiz(false)
-      setDisplayQuizAnswer(false)
+  // steits, kurš atbild par to vai atkārtošanas pārklājums ir slēpts vai redzams
+  const [parklajumaRedzamiba, setParklajumaRedzamibu] = useState(false);
+  // funkcija, kura maina atkārtošanas pārklājuma redzamības steitu
+  function mainitParklajumaRedzamibu() {
+    if(parklajumaRedzamiba){
+      setParklajumaRedzamibu(false)
+      setParklajumaAtbildeRedzamiba(false)
     }else{
-      updateQuiz(words)
-      setDisplayQuiz(true)
-      let newDisplayword = getRandomObjectFromObjArray(filterList(words));
-      setDisplaywordKanji(newDisplayword ? newDisplayword : fullObj);
+      atjauninatParklajumu(vardi)
+      setParklajumaRedzamibu(true)
+      let jaunaisAtkartojamaisVards = iegutNejausuObjektuNoSaraksta(filtretSarakstu(vardi));
+      setAtkartojamoVardu(jaunaisAtkartojamaisVards ? jaunaisAtkartojamaisVards : noklusejumaObjekts);
     }
   }
 
-  const [displayQuizAnswer, setDisplayQuizAnswer] = useState(false);
-  function changeOverlayAnswer() {
-    if(displayQuizAnswer){
-      setDisplayQuizAnswer(false)  
-    }else{
-    setDisplayQuizAnswer(true)
-  }
-  }
-
-
-
-  // Pārbauda vai vārdam ir atzīmēts checkbox
-  function filterList(objArray) {
-    let filteredList = objArray.filter(item => item.checked === 1||item.checked === true);
-    return filteredList
-  }
-  
-
-  const fullObj={ kanji: "click the new word button, to start the quiz", onyomi: newWord.onyomi, kunyomi: newWord.kunyomi, latValTulk: newWord.latValTulk , checked:1}
-
-  function getRandomObjectFromObjArray(objArray) {
-    const randomIndex = Math.floor(Math.random() * objArray.length);
-    return objArray[randomIndex];
+  // steits, kurš nosaka vai atkārtojamā vārda nozīme latviešu valodā ir redzama
+  const [parklajumaAtbildeRedzamiba, setParklajumaAtbildeRedzamiba] = useState(false);
+  // funkcija, kura maina atkārtojamā vārda redzamības steitu
+  function mainitAtbildesRedzamibu() {
+    if(parklajumaAtbildeRedzamiba){
+      setParklajumaAtbildeRedzamiba(false)  
+    }
+    else{
+      setParklajumaAtbildeRedzamiba(true)
+    }
   }
 
-  function updateQuiz(){
-    let newDisplayword = getRandomObjectFromObjArray(filterList(words));
-    setDisplaywordKanji(newDisplayword ? newDisplayword : fullObj);
-
+  // steits, kurš nosaka, kurš vārds uzrādīsies vārdu atkārtojuma pārklājumā
+  const [atkartojamaisVards, setAtkartojamoVardu] = useState(filtretSarakstu(vardi)[0] || noklusejumaObjekts)
+  // funkcija, kura maina steitu, kurš nosaka  pārklājumā uzrādīto vārdu
+  function atjauninatParklajumu(){
+    let jaunaisAtkartojamaisVards = iegutNejausuObjektuNoSaraksta(filtretSarakstu(vardi));
+    setAtkartojamoVardu(jaunaisAtkartojamaisVards ? jaunaisAtkartojamaisVards : noklusejumaObjekts);
   }
-
-  const [displaywordKanji, setDisplaywordKanji] = useState(filterList(words)[0] || fullObj)
-
 
   return (
     
     <div className="App">
-      <head>
+      <div>
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossOrigin="anonymous"></link>
-      </head>
-      
-
-      
+      </div>
       <header className="App-header">
-        <div id='screenOverlay ' className={`Screen-overlay ${displayQuiz ? '' : 'hidden'}`}>
+        <div id='screenOverlay ' className={`Screen-overlay ${parklajumaRedzamiba ? '' : 'hidden'}`}>
           <form className='vw-50 vh-80 align-middle'>
             <div className='quiz-wrapper vw-50 vh-80 '>
               <div className='quiz p-1 border border-dark border-2'>
                 <div>
                   <h1 className='bg-light text-dark p-1'>Vārds svešvalodā</h1>
                   <div className=' quiz-bg '>
-                    <h1 className='border border-light border-2'>{language==='english' ? String(displaywordKanji.word) : String(displaywordKanji.kanji)}</h1>
-                  
-                    <h1 className={`Answer ${displayQuizAnswer ? '' : 'hidden'}  border border-light border-2`}>{String(displaywordKanji.latValTulk)}</h1>
+                    <h1 className='border border-light border-2'>{valoda==='anglu' ? String(atkartojamaisVards.word) : String(atkartojamaisVards.kanji)}</h1>
+                    <h1 className={`Answer ${parklajumaAtbildeRedzamiba ? '' : 'hidden'}  border border-light border-2`}>{String(atkartojamaisVards.latValTulk)}</h1>
                   </div>
-                  
                 </div>
-                <Button className='mb-1' variant="primary" onClick={updateQuiz}>jauns vārds</Button>{' '}
-                <Button variant="light" onClick={changeOverlayAnswer}>rādīt/slēpt nozīmi</Button>{' '}
+                <Button className='mb-1' variant="primary" onClick={atjauninatParklajumu}>jauns vārds</Button>{' '}
+                <Button variant="light" onClick={mainitAtbildesRedzamibu}>rādīt/slēpt nozīmi</Button>{' '}
               </div>
             </div>
           </form>
         </div>
-
-
         <div className="navbar navbar-height smart-scroll fixed-top navbar-expand-lg navbar-light bg-white py-0 mdshadow-1 text-dark ">
-          <button onClick={changeOverlayQuiz}>quiz</button>
+          <button onClick={mainitParklajumaRedzamibu}>atkārtot</button>
           <h2 >Flash kāršu(Flash card) veidotājs un svešvārdu atkārtotājs</h2>
-        </div>
-        
+        </div>     
         <h2 className=' mt-5'>Pievieno jaunu kārti</h2>
-        
-
-
-
-
         <form>
-          <select name="Valoda" id="language" onChange={(e) => {
-            setLanguage(e.target.value);
-            setNewWord({ kanji: "", onyomi: "", kunyomi: "", latValTulk: "", word: "" , checked:1});
-            fetchAllWords()
+          <select name="Valoda" id="valoda" onChange={(e) => {
+            setValoda(e.target.value);
+            setJaunoVardu({ kanji: "", onyomi: "", kunyomi: "", latValTulk: "", word: "" , checked:1});
+            fetchVisusVardus()
             }}>
-            <option value="japanese">Japāņu</option>
-            <option value="english">Angļu</option>
+            <option value="japanu">Japāņu</option>
+            <option value="anglu">Angļu</option>
           </select>
         </form>
-        
-
-
-        {language === "japanese" ? (
+        {valoda === "japanu" ? (
           <form onSubmit={handleSubmit}  >
             <input 
               required
               placeholder='Vārds'
               type="text"
               className=' input_field'
-              value={newWord.kanji}
+              value={jaunsVards.kanji}
               onChange={(e) => {
-                const updatedNewWord={...newWord,
+                const updatedjaunsVards={...jaunsVards,
                   kanji:e.target.value}
-                setNewWord(updatedNewWord)
+                setJaunoVardu(updatedjaunsVards)
               }}
             /> 
-{/* <div class="form-floating mb-3">
-  <input type="email" class="form-control" id="floatingInput" placeholder="name@example.com"></input>
-  <label for="floatingInput">Email address</label>
-</div> */}
-
             <br />
             <input 
-              // required
               placeholder='Onyomi izrunas'
               type="text"
               className=' input_field'
-              value={newWord.onyomi}
+              value={jaunsVards.onyomi}
               onChange={(e) => {
-                const updatedNewWord={...newWord,
+                const updatedjaunsVards={...jaunsVards,
                   onyomi:e.target.value}
-                setNewWord(updatedNewWord)
+                setJaunoVardu(updatedjaunsVards)
               }}
             /> 
             <br />
             <input 
-              // required
               placeholder='Kunyomi izrunas'
               type="text"
               className=' input_field'
-              value={newWord.kunyomi}
+              value={jaunsVards.kunyomi}
               onChange={(e) => {
-                const updatedNewWord={...newWord,
+                const updatedjaunsVards={...jaunsVards,
                   kunyomi:e.target.value}
-                setNewWord(updatedNewWord)
+                setJaunoVardu(updatedjaunsVards)
               }}
             /> 
             <br />
@@ -359,11 +235,11 @@ function App() {
               placeholder='Vārda nozīme latviešu valodā'
               type="text"
               className=' input_field'
-              value={newWord.latValTulk}
+              value={jaunsVards.latValTulk}
               onChange={(e) => {
-                const updatedNewWord={...newWord,
+                const updatedjaunsVards={...jaunsVards,
                   latValTulk:e.target.value}
-                setNewWord(updatedNewWord)
+                setJaunoVardu(updatedjaunsVards)
               }}
             /> 
             <br />
@@ -374,42 +250,38 @@ function App() {
             <form onSubmit={handleSubmit}>
               <input
                 required
-                placeholder="word..."
+                placeholder="Vārds"
                 type="text"
-                value={newWord.word}
+                className=' input_field'
+                value={jaunsVards.word}
                 onChange={(e) => {
-                  const updatedNewWord = { ...newWord, word: e.target.value };
-                  setNewWord(updatedNewWord);
+                  const updatedjaunsVards = { ...jaunsVards, word: e.target.value };
+                  setJaunoVardu(updatedjaunsVards);
                 }}
               />
-              <br />
               <br />
               <input
                 required
-                placeholder="definition in Latvian..."
+                placeholder="Vārda nozīme latviešu valodā"
                 type="text"
-                value={newWord.latValTulk}
+                className=' input_field'
+                value={jaunsVards.latValTulk}
                 onChange={(e) => {
-                  const updatedNewWord = {
-                    ...newWord,
+                  const updatedjaunsVards = {
+                    ...jaunsVards,
                     latValTulk: e.target.value,
                   };
-                  setNewWord(updatedNewWord);
+                  setJaunoVardu(updatedjaunsVards);
                 }}
               />
-              <br />
               <br />
               <button type="submit">Submit</button>
             </form>
           )
         }
-
-
-
       <div className='grid-container'> 
-
-        {language === "japanese" ? (
-          words.map((word) => (
+        {valoda === "japanu" ? (
+          vardi.map((word) => (
             <div key={word.id} className='.grid-item'>
               <div className='grid-item-wrapper-inner'>
                 <div key={word.id}>
@@ -418,30 +290,26 @@ function App() {
                   <h3 >Kunyomi:   {word.kunyomi}</h3>
                   <h3 className='nozLatVal'>Nozīme latviešu valodā:<br></br>{word.latValTulk}</h3>
                   <label>
-                    <input id={word.id} type="checkbox" defaultChecked onChange={handleCheckboxChange} />
+                    <input id={word.id} type="checkbox" defaultChecked onChange={handleIzvelesRurinasMainu} />
                     Check me 
-                    {/* {console.log(word)} */}
                   </label>
-                  <button onClick={() => handleDelete(word.id)}>Delete</button>
+                  <button onClick={() => handleDzesanu(word.id)}>Delete</button>
                 </div>
               </div>
             </div>
           ))
           ) : (
-          words.map((word) => (
-            
-            
+          vardi.map((word) => (
             <div key={word.id} className='.grid-item'>
-              
               <div className='grid-item-wrapper-inner'>
                 <div key={word.id}>
                   <h2 >{word.word}</h2>
                   <h3 className='nozLatVal'>Nozīme latviešu valodā:<br></br>{word.latValTulk}</h3>
                   <label>
-                    <input id={word.id} type="checkbox" defaultChecked onChange={handleCheckboxChange} />
+                    <input id={word.id} type="checkbox" defaultChecked onChange={handleIzvelesRurinasMainu} />
                     Check me
                   </label>
-                  <button onClick={() => handleDelete(word.id)}>Delete</button>   
+                  <button onClick={() => handleDzesanu(word.id)}>Dzēst</button>   
                 </div>
               </div>
             </div>
@@ -451,7 +319,5 @@ function App() {
       </header>
     </div>
   );
-  
 }
-
 export default App;

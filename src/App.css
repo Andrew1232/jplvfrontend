@@ -1,22 +1,18 @@
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
 .App {
   text-align: center;
 }
 .App-logo {
   height: 40vmin;
   pointer-events: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+.input_field{
+  width: 35vw;
+  max-width: 500px;
 }
 .App-header {
   background-color: #282c34;
@@ -28,10 +24,31 @@
   font-size: calc(10px + 2vmin);
   color: white;
 }
-
 .App-link {
   color: #61dafb;
 }
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+ .grid-container {
+  display: grid;
+  grid-template-columns: auto ;
+  grid-template-columns: auto auto auto;
+  background-color: #2196F3;
+  padding: 10px;
+}
+.grid-item {
+  background-color: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.8);
+  padding: 20px;
+  font-size: 30px;
+  text-align: center;
+} 
 .grid-container {
   display: flex;
   flex-direction: row;
@@ -43,17 +60,13 @@
   margin: 10px;
   padding: 4px;
 }
-.grid-item {
-  background-color: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(0, 0, 0, 0.8);
-  padding: 20px;
-  font-size: 30px;
-  text-align: center;
+.grid-item{
   flex-grow: 3;
   flex-basis: 50%;
   flex-grow: 100%;
-  flex-shrink: 100%;
-} 
+   flex-shrink: 100%;
+}
+
 .grid-item-wrapper-inner{
   border: black;
   border-style: solid;
@@ -71,6 +84,7 @@
   align-items: center;
   display: flex;
 }
+
 .quiz-wrapper {
   background-color: purple;
   display: flex;
@@ -95,8 +109,4 @@
 }
 .quiz-bg{
   background-color: #4a148c;
-}
-.input_field{
-  width: 35vw;
-  max-width: 500px;
 }
